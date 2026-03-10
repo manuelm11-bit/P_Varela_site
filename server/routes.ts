@@ -25,12 +25,12 @@ export async function registerRoutes(
 
   // Seed default admin user
   async function seedAdmin() {
-    const existingAdmin = await storage.getUserByUsername("biblioteca025");
+    const existingAdmin = await storage.getUserByUsername("Biblioteca025");
     if (!existingAdmin) {
       // For simplicity in this demo, we store the password directly. 
       // In a real app, you should hash the password!
       await storage.createUser({
-        username: "biblioteca025",
+        username: "Biblioteca025",
         password: "Pa$$w0rd"
       });
       console.log("Admin user seeded.");
