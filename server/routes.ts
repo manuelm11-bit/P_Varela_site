@@ -105,5 +105,47 @@ export async function registerRoutes(
     res.json(registrations);
   });
 
+  // Export registrations as CSV
+  app.get("/api/registrations/export/csv", requireAuth, async (req, res) => {
+    try {
+      const registrations = await storage.getRegistrations();
+      
+      // Get selected month from query params or use current month
+      const monthParam = req.query.month as string;
+      let filteredRegs = registrations;
+      
+      if (monthParam) {
+        const [year, month] = monthParam.split("-");
+        filteredRegs = registrations.filter(reg => {
+          const regDate = new Date(reg.createdAt);
+          return regDate.getFullYear() === parseInt(year) && 
+                 (regDate.getMonth() + 1) === parseInt(month);
+        });
+      }
+
+      // Create CSV content
+      const headers = ["Nome", "Ano", "Turma", "Atividade", "Data de Entrada"];
+      const rows = filteredRegs.map(reg => [
+        reg.name,
+        reg.year,
+        reg.className,
+        reg.activity,
+        new Date(reg.createdAt).toLocaleString("pt-PT")
+      ]);
+
+      let csv = headers.join(",") + "\n";
+      rows.forEach(row => {
+        csv += row.map(cell => `"${cell}"`).join(",") + "\n";
+      });
+
+      res.setHeader("Content-Type", "text/csv; charset=utf-8");
+      res.setHeader("Content-Disposition", "attachment; filename=registrations.csv");
+      res.send(csv);
+    } catch (err) {
+      console.error("Export error:", err);
+      res.status(500).json({ message: "Erro ao exportar dados" });
+    }
+  });
+
   return httpServer;
 }

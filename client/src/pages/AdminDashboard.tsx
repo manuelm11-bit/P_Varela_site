@@ -2,13 +2,14 @@ import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { format, isSameDay } from "date-fns";
 import { pt } from "date-fns/locale";
-import { LogOut, LayoutDashboard, Calendar as CalendarIcon, Users } from "lucide-react";
+import { LogOut, LayoutDashboard, Calendar as CalendarIcon, Users, Download } from "lucide-react";
 import { useUser, useLogout } from "@/hooks/use-auth";
 import { useRegistrations } from "@/hooks/use-registrations";
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { BookOpen } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -49,6 +50,14 @@ export default function AdminDashboard() {
     logout.mutate(undefined, {
       onSuccess: () => setLocation("/login"),
     });
+  };
+
+  const handleExportCSV = () => {
+    const monthStr = selectedDate 
+      ? `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}`
+      : "";
+    const url = `/api/registrations/export/csv${monthStr ? `?month=${monthStr}` : ""}`;
+    window.location.href = url;
   };
 
   // Filter registrations by selected date
@@ -154,16 +163,27 @@ export default function AdminDashboard() {
                     </CardDescription>
                   </div>
                   
-                  {selectedDate && (
+                  <div className="flex gap-2 shrink-0">
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      onClick={() => setSelectedDate(undefined)}
-                      className="shrink-0 rounded-lg text-slate-500"
+                      onClick={handleExportCSV}
+                      className="rounded-lg text-slate-500 hover:text-green-600 hover:border-green-200"
                     >
-                      Mostrar Todos
+                      <Download className="w-4 h-4 mr-2" />
+                      Exportar CSV
                     </Button>
-                  )}
+                    {selectedDate && (
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => setSelectedDate(undefined)}
+                        className="shrink-0 rounded-lg text-slate-500"
+                      >
+                        Mostrar Todos
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </CardHeader>
               
