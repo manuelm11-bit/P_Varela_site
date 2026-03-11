@@ -11,15 +11,18 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
   
-  // Add CORS headers for credentials
+  // Add CORS headers for credentials (only for cross-origin requests)
   app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", req.get("origin") || "*");
-    res.header("Access-Control-Allow-Credentials", "true");
-    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-    
-    if (req.method === "OPTIONS") {
-      return res.sendStatus(200);
+    const origin = req.get("origin");
+    if (origin) {
+      res.header("Access-Control-Allow-Origin", origin);
+      res.header("Access-Control-Allow-Credentials", "true");
+      res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+      res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+      
+      if (req.method === "OPTIONS") {
+        return res.sendStatus(200);
+      }
     }
     next();
   });
@@ -111,9 +114,13 @@ export async function registerRoutes(
     // @ts-ignore
     const username = req.session?.username;
     
+    console.log(`[AUTH] GET /api/auth/me - userId: ${userId}, username: ${username}`);
+    
     if (!userId) {
+      console.log(`[AUTH] User not authenticated`);
       return res.status(401).json({ message: "Not authenticated" });
     }
+    console.log(`[AUTH] User authenticated: ${username}`);
     res.json({ username });
   });
 

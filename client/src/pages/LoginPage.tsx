@@ -50,15 +50,13 @@ export default function LoginPage() {
     console.log("Login attempt with:", data.username);
     login.mutate(data, {
       onSuccess: () => {
-        console.log("Login successful");
+        console.log("Login successful, toast showing, immediate redirect");
         toast({
           title: "Sessão iniciada",
           description: "Bem-vindo ao painel de administração.",
         });
-        // Wait briefly for toast to show, then redirect
-        setTimeout(() => {
-          window.location.href = "/admin";
-        }, 500);
+        // Immediate redirect - cookies should be sent automatically
+        window.location.href = "/admin";
       },
       onError: (error) => {
         console.error("Login error:", error);
