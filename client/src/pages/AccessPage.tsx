@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 
-const ACCESS_CODE = "Biblioteca2024";
+const ACCESS_CODE = "Varela026";
 
 export default function AccessPage() {
   const [code, setCode] = useState("");
@@ -29,27 +29,27 @@ export default function AccessPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-50 via-slate-50 to-white flex items-center justify-center p-4 relative overflow-hidden">
-      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-400/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-indigo-400/10 rounded-full blur-3xl pointer-events-none" />
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
+      <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
 
       <div className="w-full max-w-md relative z-10">
         <div className="text-center mb-8">
-          <div className="mx-auto bg-primary/10 w-20 h-20 rounded-2xl flex items-center justify-center mb-6 shadow-inner border border-primary/20">
+          <div className="mx-auto bg-primary/20 w-20 h-20 rounded-2xl flex items-center justify-center mb-6 shadow-inner border border-primary/40">
             <Lock className="w-10 h-10 text-primary" />
           </div>
-          <h1 className="text-4xl font-bold text-slate-900 tracking-tight mb-3">
+          <h1 className="text-4xl font-bold text-white tracking-tight mb-3">
             Acesso Restrito
           </h1>
-          <p className="text-slate-500 text-lg">
+          <p className="text-slate-400 text-lg">
             Introduza o código de acesso da biblioteca
           </p>
         </div>
 
-        <Card className="glass-panel p-8 border-0 rounded-3xl">
+        <Card className="bg-slate-800/80 backdrop-blur-xl border border-slate-700/50 p-8 rounded-3xl shadow-xl shadow-black/50">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-slate-700 font-semibold mb-3">
+              <label className="block text-white font-semibold mb-3">
                 Código de Acesso
               </label>
               <Input
@@ -57,7 +57,7 @@ export default function AccessPage() {
                 placeholder="Introduza o código..."
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
-                className="h-12 bg-white/50 border-slate-200 focus:bg-white transition-colors rounded-xl"
+                className="h-12 bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-500 focus:bg-slate-700 transition-colors rounded-xl"
               />
             </div>
 
