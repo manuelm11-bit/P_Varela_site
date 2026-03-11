@@ -20,7 +20,12 @@ export async function registerRoutes(
     store: new SessionStore({
       checkPeriod: 86400000 // prune expired entries every 24h
     }),
-    cookie: { secure: process.env.NODE_ENV === "production" }
+    cookie: { 
+      secure: process.env.NODE_ENV === "production",
+      httpOnly: true,
+      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
   }));
 
   // Seed default admin user

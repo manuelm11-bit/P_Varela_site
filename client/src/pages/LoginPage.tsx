@@ -5,9 +5,7 @@ import { Shield, ArrowLeft, Key, UserCircle } from "lucide-react";
 import { useLocation, Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useLogin, useUser } from "@/hooks/use-auth";
-import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
-import { api } from "@shared/routes";
 
 import {
   Form,
@@ -58,12 +56,10 @@ export default function LoginPage() {
           title: "Sessão iniciada",
           description: "Bem-vindo ao painel de administração.",
         });
-        // Invalidate user query to refresh auth state
-        await queryClient.invalidateQueries({ queryKey: [api.auth.me.path] });
-        // Wait a moment then redirect
-        await new Promise(resolve => setTimeout(resolve, 500));
-        console.log("Redirecting to /admin");
-        setLocation("/admin");
+        // Use window.location.href to ensure cookies are preserved
+        setTimeout(() => {
+          window.location.href = "/admin";
+        }, 1000);
       },
       onError: (error) => {
         console.error("Login error:", error);
