@@ -52,16 +52,16 @@ export default function LoginPage() {
   const onSubmit = (data: LoginFormValues) => {
     console.log("Login attempt with:", data.username);
     login.mutate(data, {
-      onSuccess: async () => {
-        console.log("Login successful, refreshing auth state");
+      onSuccess: () => {
+        console.log("Login successful, redirecting");
         toast({
           title: "Sessão iniciada",
           description: "Bem-vindo ao painel de administração.",
         });
-        // Refresh the user query to get the new session
-        await queryClient.refetchQueries({ queryKey: [api.auth.me.path] });
-        console.log("Auth state refreshed, redirecting to admin");
-        setLocation("/admin");
+        // Hard redirect to preserve cookies and session
+        setTimeout(() => {
+          window.location.href = "/admin";
+        }, 800);
       },
       onError: (error) => {
         console.error("Login error:", error);

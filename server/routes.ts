@@ -114,13 +114,9 @@ export async function registerRoutes(
     // @ts-ignore
     const username = req.session?.username;
     
-    console.log(`[AUTH] GET /api/auth/me - userId: ${userId}, username: ${username}`);
-    
     if (!userId) {
-      console.log(`[AUTH] User not authenticated`);
       return res.status(401).json({ message: "Not authenticated" });
     }
-    console.log(`[AUTH] User authenticated: ${username}`);
     res.json({ username });
   });
 
