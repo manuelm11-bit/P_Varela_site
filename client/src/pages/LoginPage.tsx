@@ -48,12 +48,14 @@ export default function LoginPage() {
 
   const onSubmit = (data: LoginFormValues) => {
     login.mutate(data, {
-      onSuccess: () => {
+      onSuccess: async () => {
+        // Wait a moment for session to be established on server
+        await new Promise(resolve => setTimeout(resolve, 500));
         toast({
           title: "Sessão iniciada",
           description: "Bem-vindo ao painel de administração.",
         });
-        // Use window.location to ensure page reload and session is established
+        // Use window.location to reload page and get new session cookies
         window.location.href = "/admin";
       },
       onError: (error) => {

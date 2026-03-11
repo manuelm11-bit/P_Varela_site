@@ -54,7 +54,13 @@ export async function registerRoutes(
       // @ts-ignore
       req.session.username = user.username;
       
-      res.json({ message: "Logged in successfully" });
+      // Save session before responding
+      req.session.save((err: any) => {
+        if (err) {
+          return res.status(500).json({ message: "Erro ao guardar sessão" });
+        }
+        res.json({ message: "Logged in successfully" });
+      });
     } catch (err) {
        res.status(401).json({ message: "Invalid credentials" });
     }
