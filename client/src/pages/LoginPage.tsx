@@ -53,14 +53,14 @@ export default function LoginPage() {
     console.log("Login attempt with:", data.username);
     login.mutate(data, {
       onSuccess: () => {
-        toast({
-          title: "Sessão iniciada",
-          description: "Bem-vindo ao painel de administração.",
-        });
-        // Clear cache and redirect using wouter (works in iframe)
+        // Try wouter first (for iframe preview), then fallback to window.location
         queryClient.invalidateQueries({ queryKey: [api.auth.me.path] });
         setTimeout(() => {
           setLocation("/admin");
+          // Also try hard redirect as fallback (for new browser tab)
+          setTimeout(() => {
+            window.location.href = "/admin";
+          }, 100);
         }, 200);
       },
       onError: (error) => {
