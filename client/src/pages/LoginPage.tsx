@@ -53,7 +53,8 @@ export default function LoginPage() {
           title: "Sessão iniciada",
           description: "Bem-vindo ao painel de administração.",
         });
-        setLocation("/admin");
+        // Use window.location to ensure page reload and session is established
+        window.location.href = "/admin";
       },
       onError: (error) => {
         toast({
