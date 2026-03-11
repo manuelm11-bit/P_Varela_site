@@ -50,16 +50,14 @@ export default function LoginPage() {
   const onSubmit = (data: LoginFormValues) => {
     console.log("Login attempt with:", data.username);
     login.mutate(data, {
-      onSuccess: async () => {
+      onSuccess: () => {
         console.log("Login successful");
         toast({
           title: "Sessão iniciada",
           description: "Bem-vindo ao painel de administração.",
         });
-        // Use window.location.href to ensure cookies are preserved
-        setTimeout(() => {
-          window.location.href = "/admin";
-        }, 1000);
+        // Immediate hard redirect to ensure session cookies are sent
+        window.location.href = "/admin";
       },
       onError: (error) => {
         console.error("Login error:", error);

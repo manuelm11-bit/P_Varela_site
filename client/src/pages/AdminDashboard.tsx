@@ -31,17 +31,30 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (!isAuthLoading && !user) {
-      setLocation("/login");
+      console.log("Not authenticated, redirecting to login");
+      // Small delay to ensure redirect doesn't happen too fast
+      const timer = setTimeout(() => {
+        setLocation("/login");
+      }, 500);
+      return () => clearTimeout(timer);
     }
   }, [user, isAuthLoading, setLocation]);
 
-  if (isAuthLoading || !user) {
+  if (isAuthLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-900">
         <div className="animate-pulse flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
           <p className="text-slate-400 font-medium">A carregar...</p>
         </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-900">
+        <p className="text-red-400">Erro de autenticação. A redirecionar...</p>
       </div>
     );
   }
