@@ -52,10 +52,15 @@ export async function registerRoutes(
       const { username, password } = api.auth.login.input.parse(req.body);
       const user = await storage.getUserByUsername(username);
       
+      console.log(`Login attempt for user: ${username}`);
+      
       if (!user || user.password !== password) {
+        console.log(`Login failed for user: ${username}`);
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
+      console.log(`Login successful for user: ${username}, ID: ${user.id}`);
+      
       // @ts-ignore
       req.session.userId = user.id;
       // @ts-ignore
@@ -64,11 +69,14 @@ export async function registerRoutes(
       // Save session before responding
       req.session.save((err: any) => {
         if (err) {
+          console.error("Session save error:", err);
           return res.status(500).json({ message: "Erro ao guardar sessão" });
         }
+        console.log("Session saved successfully");
         res.json({ message: "Logged in successfully" });
       });
     } catch (err) {
+       console.error("Login error:", err);
        res.status(401).json({ message: "Invalid credentials" });
     }
   });
