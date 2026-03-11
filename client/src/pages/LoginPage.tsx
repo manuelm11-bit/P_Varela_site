@@ -53,14 +53,8 @@ export default function LoginPage() {
     console.log("Login attempt with:", data.username);
     login.mutate(data, {
       onSuccess: () => {
-        toast({
-          title: "Sessão iniciada",
-          description: "Bem-vindo ao painel de administração.",
-        });
-        // Full page reload to ensure cookies are sent
-        setTimeout(() => {
-          window.location.reload();
-        }, 500);
+        // Navigate immediately to /admin - session is already saved on server
+        window.location.assign("/admin");
       },
       onError: (error) => {
         console.error("Login error:", error);

@@ -30,12 +30,10 @@ export default function AdminDashboard() {
   const { data: registrations = [], isLoading: isRegLoading } = useRegistrations();
 
   useEffect(() => {
-    console.log("Auth state:", { user, isAuthLoading, error: authError });
     if (!isAuthLoading && !user) {
-      console.log("Not authenticated, redirecting to login");
       setLocation("/login");
     }
-  }, [user, isAuthLoading, authError, setLocation]);
+  }, [user, isAuthLoading, setLocation]);
 
   if (isAuthLoading || !user) {
     return (
