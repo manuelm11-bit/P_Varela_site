@@ -25,19 +25,26 @@ export async function registerRoutes(
 
   // Seed default admin user
   async function seedAdmin() {
-    const existingAdmin = await storage.getUserByUsername("Biblioteca025");
-    if (!existingAdmin) {
-      // For simplicity in this demo, we store the password directly. 
-      // In a real app, you should hash the password!
-      await storage.createUser({
-        username: "Biblioteca025",
-        password: "Pa$$w0rd"
-      });
-      console.log("Admin user seeded.");
+    try {
+      const existingAdmin = await storage.getUserByUsername("Biblioteca025");
+      if (!existingAdmin) {
+        // For simplicity in this demo, we store the password directly. 
+        // In a real app, you should hash the password!
+        const newAdmin = await storage.createUser({
+          username: "Biblioteca025",
+          password: "Pa$$w0rd"
+        });
+        console.log("Admin user created with ID:", newAdmin.id);
+      } else {
+        console.log("Admin user already exists with ID:", existingAdmin.id);
+      }
+    } catch (err) {
+      console.error("Error seeding admin:", err);
     }
   }
   
-  seedAdmin().catch(console.error);
+  // Run seed on startup
+  seedAdmin();
 
   // --- Auth Routes ---
   app.post(api.auth.login.path, async (req, res) => {
@@ -74,11 +81,14 @@ export async function registerRoutes(
 
   app.get(api.auth.me.path, (req, res) => {
     // @ts-ignore
-    if (!req.session.userId) {
+    const userId = req.session?.userId;
+    // @ts-ignore
+    const username = req.session?.username;
+    
+    if (!userId) {
       return res.status(401).json({ message: "Not authenticated" });
     }
-    // @ts-ignore
-    res.json({ username: req.session.username });
+    res.json({ username });
   });
 
   // Middleware to check auth for protected routes

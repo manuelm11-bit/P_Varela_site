@@ -47,22 +47,26 @@ export default function LoginPage() {
   });
 
   const onSubmit = (data: LoginFormValues) => {
+    console.log("Login attempt with:", data.username);
     login.mutate(data, {
       onSuccess: async () => {
-        // Wait a moment for session to be established on server
-        await new Promise(resolve => setTimeout(resolve, 500));
+        console.log("Login successful, redirecting to admin...");
         toast({
           title: "Sessão iniciada",
           description: "Bem-vindo ao painel de administração.",
         });
+        // Wait a moment for session to be established on server
+        await new Promise(resolve => setTimeout(resolve, 1000));
         // Use window.location to reload page and get new session cookies
         window.location.href = "/admin";
       },
       onError: (error) => {
+        console.error("Login error:", error);
         toast({
           variant: "destructive",
           title: "Erro de autenticação",
           description: error.message,
+          duration: 6000, // Show error for 6 seconds
         });
       },
     });
@@ -155,9 +159,14 @@ export default function LoginPage() {
               <Button
                 type="submit"
                 disabled={login.isPending}
-                className="w-full h-14 text-lg font-bold rounded-xl shadow-lg shadow-primary/25 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 mt-4"
+                className="w-full h-14 text-lg font-bold rounded-xl shadow-lg shadow-primary/25 hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 mt-4 relative"
               >
-                {login.isPending ? "A verificar..." : "Entrar"}
+                {login.isPending ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    A verificar credenciais...
+                  </div>
+                ) : "Entrar"}
               </Button>
             </form>
           </Form>
