@@ -65,7 +65,7 @@ export default function LoginPage() {
     });
   };
 
-  if (isLoading || user) {
+  if (user && !isLoading) {
     return null; 
   }
 
@@ -75,15 +75,23 @@ export default function LoginPage() {
       <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-primary/20 rounded-full blur-[100px] pointer-events-none" />
       
       <div className="w-full max-w-md relative z-10">
-        <Link 
-          href="/" 
-          className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-colors mb-8 group"
-        >
-          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-          Voltar ao início
-        </Link>
+        {!isLoading && (
+          <Link 
+            href="/" 
+            className="inline-flex items-center gap-2 text-slate-400 hover:text-white transition-colors mb-8 group"
+          >
+            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+            Voltar ao início
+          </Link>
+        )}
 
-        <Card className="bg-slate-800/80 backdrop-blur-xl border-slate-700/50 shadow-2xl p-8 sm:p-10 rounded-3xl">
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center gap-4 py-12">
+            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-slate-400 font-medium">A verificar autenticação...</p>
+          </div>
+        ) : (
+          <Card className="bg-slate-800/80 backdrop-blur-xl border-slate-700/50 shadow-2xl p-8 sm:p-10 rounded-3xl">
           <div className="text-center mb-8">
             <div className="mx-auto bg-primary/20 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 shadow-inner border border-primary/30">
               <Shield className="w-8 h-8 text-primary" />
@@ -150,7 +158,8 @@ export default function LoginPage() {
               </Button>
             </form>
           </Form>
-        </Card>
+          </Card>
+        )}
       </div>
     </div>
   );
