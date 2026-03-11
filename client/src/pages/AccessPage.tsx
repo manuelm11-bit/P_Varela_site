@@ -15,9 +15,10 @@ export default function AccessPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (code === ACCESS_CODE) {
+    if (code.trim() === ACCESS_CODE) {
       localStorage.setItem("bibliotecaAccess", "true");
-      setLocation("/");
+      // Reload page to trigger the access check
+      window.location.href = "/";
     } else {
       toast({
         variant: "destructive",
