@@ -56,8 +56,10 @@ export default function LoginPage() {
           title: "Sessão iniciada",
           description: "Bem-vindo ao painel de administração.",
         });
-        // Immediate hard redirect to ensure session cookies are sent
-        window.location.href = "/admin";
+        // Wait briefly for toast to show, then redirect
+        setTimeout(() => {
+          window.location.href = "/admin";
+        }, 500);
       },
       onError: (error) => {
         console.error("Login error:", error);

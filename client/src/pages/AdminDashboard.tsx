@@ -22,7 +22,7 @@ import { Badge } from "@/components/ui/badge";
 
 export default function AdminDashboard() {
   const [, setLocation] = useLocation();
-  const { data: user, isLoading: isAuthLoading } = useUser();
+  const { data: user, isLoading: isAuthLoading, error: authError } = useUser();
   const logout = useLogout();
   
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
@@ -30,17 +30,15 @@ export default function AdminDashboard() {
   const { data: registrations = [], isLoading: isRegLoading } = useRegistrations();
 
   useEffect(() => {
+    console.log("Auth state:", { user, isAuthLoading, error: authError });
     if (!isAuthLoading && !user) {
       console.log("Not authenticated, redirecting to login");
-      // Small delay to ensure redirect doesn't happen too fast
-      const timer = setTimeout(() => {
-        setLocation("/login");
-      }, 500);
-      return () => clearTimeout(timer);
+      setLocation("/login");
     }
-  }, [user, isAuthLoading, setLocation]);
+  }, [user, isAuthLoading, authError, setLocation]);
 
   if (isAuthLoading) {
+    console.log("Still loading user data...");
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-900">
         <div className="animate-pulse flex flex-col items-center gap-4">
@@ -52,12 +50,15 @@ export default function AdminDashboard() {
   }
 
   if (!user) {
+    console.log("No user data, should redirect to login");
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-900">
-        <p className="text-red-400">Erro de autenticação. A redirecionar...</p>
+        <p className="text-red-400">Não autenticado. A redirecionar para login...</p>
       </div>
     );
   }
+
+  console.log("User authenticated:", user);
 
   const handleLogout = () => {
     logout.mutate(undefined, {
