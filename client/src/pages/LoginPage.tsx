@@ -53,15 +53,13 @@ export default function LoginPage() {
     console.log("Login attempt with:", data.username);
     login.mutate(data, {
       onSuccess: () => {
-        // Try wouter first (for iframe preview), then fallback to window.location
-        queryClient.invalidateQueries({ queryKey: [api.auth.me.path] });
+        queryClient.setQueryData([api.auth.me.path], undefined);
+        // First try wouter routing (for iframe preview)
+        setLocation("/admin");
+        // Fallback to hard redirect after short delay (for production)
         setTimeout(() => {
-          setLocation("/admin");
-          // Also try hard redirect as fallback (for new browser tab)
-          setTimeout(() => {
-            window.location.href = "/admin";
-          }, 100);
-        }, 200);
+          window.location.href = "/admin";
+        }, 500);
       },
       onError: (error) => {
         console.error("Login error:", error);
