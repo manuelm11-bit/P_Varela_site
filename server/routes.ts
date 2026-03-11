@@ -123,8 +123,8 @@ export async function registerRoutes(
         });
       }
 
-      // Create CSV content
-      const headers = ["Nome", "Ano", "Turma", "Atividade", "Data de Entrada"];
+      // Create CSV content (using semicolon separator for Portuguese Excel compatibility)
+      const headers = ["Nome", "Ano", "Turma", "Atividade", "Data e Hora de Entrada"];
       const rows = filteredRegs.map(reg => [
         reg.name,
         reg.year,
@@ -133,14 +133,17 @@ export async function registerRoutes(
         new Date(reg.createdAt).toLocaleString("pt-PT")
       ]);
 
-      let csv = headers.join(",") + "\n";
+      let csv = headers.join(";") + "\n";
       rows.forEach(row => {
-        csv += row.map(cell => `"${cell}"`).join(",") + "\n";
+        csv += row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(";") + "\n";
       });
+
+      // Add BOM for Excel to recognize UTF-8
+      const csvWithBOM = "\uFEFF" + csv;
 
       res.setHeader("Content-Type", "text/csv; charset=utf-8");
       res.setHeader("Content-Disposition", "attachment; filename=registrations.csv");
-      res.send(csv);
+      res.send(csvWithBOM);
     } catch (err) {
       console.error("Export error:", err);
       res.status(500).json({ message: "Erro ao exportar dados" });

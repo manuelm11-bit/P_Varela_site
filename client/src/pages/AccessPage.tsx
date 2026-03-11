@@ -46,7 +46,7 @@ export default function AccessPage() {
           </p>
         </div>
 
-        <Card className="bg-slate-800/80 backdrop-blur-xl border border-slate-700/50 p-8 rounded-3xl shadow-xl shadow-black/50">
+        <div className="bg-slate-800/90 backdrop-blur-xl border border-slate-700 p-8 rounded-3xl shadow-2xl shadow-black/80">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-white font-semibold mb-3">
@@ -57,7 +57,7 @@ export default function AccessPage() {
                 placeholder="Introduza o código..."
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
-                className="h-12 bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-500 focus:bg-slate-700 transition-colors rounded-xl"
+                className="h-12 bg-slate-700 border-slate-600 text-white placeholder:text-slate-500 focus:bg-slate-700 focus:border-primary transition-colors rounded-xl"
               />
             </div>
 
@@ -68,7 +68,7 @@ export default function AccessPage() {
               Entrar
             </Button>
           </form>
-        </Card>
+        </div>
       </div>
     </div>
   );
