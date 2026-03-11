@@ -39,7 +39,7 @@ export async function registerRoutes(
     cookie: { 
       secure: process.env.NODE_ENV === "production",
       httpOnly: true,
-      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
+      sameSite: "lax",
       maxAge: 24 * 60 * 60 * 1000 // 24 hours
     }
   }));

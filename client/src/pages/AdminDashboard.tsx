@@ -37,8 +37,7 @@ export default function AdminDashboard() {
     }
   }, [user, isAuthLoading, authError, setLocation]);
 
-  if (isAuthLoading) {
-    console.log("Still loading user data...");
+  if (isAuthLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-900">
         <div className="animate-pulse flex flex-col items-center gap-4">
@@ -48,17 +47,6 @@ export default function AdminDashboard() {
       </div>
     );
   }
-
-  if (!user) {
-    console.log("No user data, should redirect to login");
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-900">
-        <p className="text-red-400">Não autenticado. A redirecionar para login...</p>
-      </div>
-    );
-  }
-
-  console.log("User authenticated:", user);
 
   const handleLogout = () => {
     logout.mutate(undefined, {

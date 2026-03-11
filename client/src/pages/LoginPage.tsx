@@ -53,15 +53,14 @@ export default function LoginPage() {
     console.log("Login attempt with:", data.username);
     login.mutate(data, {
       onSuccess: () => {
-        console.log("Login successful, redirecting");
         toast({
           title: "Sessão iniciada",
           description: "Bem-vindo ao painel de administração.",
         });
-        // Hard redirect to preserve cookies and session
+        // Full page reload to ensure cookies are sent
         setTimeout(() => {
-          window.location.href = "/admin";
-        }, 800);
+          window.location.reload();
+        }, 500);
       },
       onError: (error) => {
         console.error("Login error:", error);
