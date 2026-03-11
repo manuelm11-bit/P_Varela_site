@@ -5,6 +5,8 @@ import { Shield, ArrowLeft, Key, UserCircle } from "lucide-react";
 import { useLocation, Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useLogin, useUser } from "@/hooks/use-auth";
+import { useQueryClient } from "@tanstack/react-query";
+import { api } from "@shared/routes";
 import { useEffect } from "react";
 
 import {
@@ -30,6 +32,7 @@ export default function LoginPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const login = useLogin();
+  const queryClient = useQueryClient();
   const { data: user, isLoading } = useUser();
 
   useEffect(() => {
@@ -49,14 +52,16 @@ export default function LoginPage() {
   const onSubmit = (data: LoginFormValues) => {
     console.log("Login attempt with:", data.username);
     login.mutate(data, {
-      onSuccess: () => {
-        console.log("Login successful, toast showing, immediate redirect");
+      onSuccess: async () => {
+        console.log("Login successful, refreshing auth state");
         toast({
           title: "Sessão iniciada",
           description: "Bem-vindo ao painel de administração.",
         });
-        // Immediate redirect - cookies should be sent automatically
-        window.location.href = "/admin";
+        // Refresh the user query to get the new session
+        await queryClient.refetchQueries({ queryKey: [api.auth.me.path] });
+        console.log("Auth state refreshed, redirecting to admin");
+        setLocation("/admin");
       },
       onError: (error) => {
         console.error("Login error:", error);
