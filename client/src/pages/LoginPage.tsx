@@ -53,8 +53,15 @@ export default function LoginPage() {
     console.log("Login attempt with:", data.username);
     login.mutate(data, {
       onSuccess: () => {
-        // Navigate immediately to /admin - session is already saved on server
-        window.location.assign("/admin");
+        toast({
+          title: "Sessão iniciada",
+          description: "Bem-vindo ao painel de administração.",
+        });
+        // Clear cache and redirect using wouter (works in iframe)
+        queryClient.invalidateQueries({ queryKey: [api.auth.me.path] });
+        setTimeout(() => {
+          setLocation("/admin");
+        }, 200);
       },
       onError: (error) => {
         console.error("Login error:", error);
