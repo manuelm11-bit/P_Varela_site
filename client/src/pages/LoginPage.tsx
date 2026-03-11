@@ -30,7 +30,6 @@ export default function LoginPage() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const login = useLogin();
-  const queryClient = useQueryClient();
   const { data: user, isLoading } = useUser();
 
   useEffect(() => {
