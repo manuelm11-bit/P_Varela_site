@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { format, isSameDay } from "date-fns";
+import { format, isSameDay, isSameMonth } from "date-fns";
 import { pt } from "date-fns/locale";
 import { LogOut, LayoutDashboard, Calendar as CalendarIcon, Users, Download } from "lucide-react";
 import { useUser, useLogout } from "@/hooks/use-auth";
@@ -25,7 +25,8 @@ export default function AdminDashboard() {
   const { data: user, isLoading: isAuthLoading, error: authError } = useUser();
   const logout = useLogout();
   
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [currentMonth] = useState<Date>(new Date());
   
   const { data: registrations = [], isLoading: isRegLoading } = useRegistrations();
 
@@ -53,19 +54,25 @@ export default function AdminDashboard() {
   };
 
   const handleExportCSV = () => {
-    const monthStr = selectedDate 
-      ? `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, "0")}`
-      : "";
-    const url = `/api/registrations/export/csv${monthStr ? `?month=${monthStr}` : ""}`;
+    const dateRef = selectedDate ?? currentMonth;
+    const monthStr = `${dateRef.getFullYear()}-${String(dateRef.getMonth() + 1).padStart(2, "0")}`;
+    const url = `/api/registrations/export/csv?month=${monthStr}`;
     window.location.href = url;
   };
 
-  // Filter registrations by selected date
+  // If a day is selected, show only that day. Otherwise show the whole current month.
   const filteredRegistrations = registrations.filter((reg) => {
-    if (!selectedDate) return true;
     const regDate = new Date(reg.createdAt);
-    return isSameDay(regDate, selectedDate);
+    if (selectedDate) {
+      return isSameDay(regDate, selectedDate);
+    }
+    return isSameMonth(regDate, currentMonth);
   });
+
+  // Count for today separately for the stat card
+  const todayCount = registrations.filter((reg) =>
+    isSameDay(new Date(reg.createdAt), new Date())
+  ).length;
 
   const getActivityColor = (activity: string) => {
     switch (activity.toLowerCase()) {
@@ -131,18 +138,26 @@ export default function AdminDashboard() {
             </Card>
 
             <Card className="border-0 shadow-lg shadow-black/40 rounded-2xl bg-gradient-to-br from-primary to-blue-700 text-white">
-              <CardContent className="p-6">
+              <CardContent className="p-6 space-y-4">
                 <div className="flex items-center gap-4">
                   <div className="p-3 bg-white/20 rounded-xl backdrop-blur-md">
                     <Users className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <p className="text-blue-100 text-sm font-medium">Total de alunos hoje</p>
+                    <p className="text-blue-100 text-sm font-medium">
+                      {selectedDate ? `${format(selectedDate, "d 'de' MMMM", { locale: pt })}` : "Este mês"}
+                    </p>
                     <p className="text-3xl font-bold tracking-tight">
                       {isRegLoading ? "-" : filteredRegistrations.length}
                     </p>
                   </div>
                 </div>
+                {!selectedDate && (
+                  <div className="border-t border-white/20 pt-4 flex items-center justify-between">
+                    <p className="text-blue-100 text-sm">Hoje</p>
+                    <p className="text-xl font-bold">{isRegLoading ? "-" : todayCount}</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -158,8 +173,8 @@ export default function AdminDashboard() {
                     </CardTitle>
                     <CardDescription className="text-slate-400 mt-1">
                       {selectedDate 
-                        ? `A mostrar alunos que visitaram a biblioteca em ${format(selectedDate, "dd 'de' MMMM, yyyy", { locale: pt })}` 
-                        : "Selecione uma data para filtrar."}
+                        ? `A mostrar registos de ${format(selectedDate, "dd 'de' MMMM, yyyy", { locale: pt })}` 
+                        : `A mostrar todos os registos de ${format(currentMonth, "MMMM 'de' yyyy", { locale: pt })}`}
                     </CardDescription>
                   </div>
                   
@@ -180,7 +195,7 @@ export default function AdminDashboard() {
                         onClick={() => setSelectedDate(undefined)}
                         className="shrink-0 rounded-lg text-slate-400 border-slate-600 hover:border-slate-500"
                       >
-                        Mostrar Todos
+                        Ver Mês Todo
                       </Button>
                     )}
                   </div>
@@ -195,22 +210,29 @@ export default function AdminDashboard() {
                         <TableHead className="font-semibold text-slate-300 py-4 pl-6">Aluno</TableHead>
                         <TableHead className="font-semibold text-slate-300">Ano / Turma</TableHead>
                         <TableHead className="font-semibold text-slate-300">Atividade</TableHead>
-                        <TableHead className="font-semibold text-slate-300 text-right pr-6">Hora de Entrada</TableHead>
+                        {!selectedDate && (
+                          <TableHead className="font-semibold text-slate-300">Data</TableHead>
+                        )}
+                        <TableHead className="font-semibold text-slate-300 text-right pr-6">Hora</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {isRegLoading ? (
                         <TableRow>
-                          <TableCell colSpan={4} className="h-48 text-center text-slate-400">
+                          <TableCell colSpan={selectedDate ? 4 : 5} className="h-48 text-center text-slate-400">
                             A carregar dados...
                           </TableCell>
                         </TableRow>
                       ) : filteredRegistrations.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={4} className="h-48 text-center text-slate-400">
+                          <TableCell colSpan={selectedDate ? 4 : 5} className="h-48 text-center text-slate-400">
                             <div className="flex flex-col items-center justify-center">
                               <BookOpen className="w-10 h-10 text-slate-600 mb-3" />
-                              <p>Nenhum registo encontrado para este dia.</p>
+                              <p>
+                                {selectedDate
+                                  ? "Nenhum registo encontrado para este dia."
+                                  : "Nenhum registo encontrado para este mês."}
+                              </p>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -228,6 +250,11 @@ export default function AdminDashboard() {
                                 {reg.activity}
                               </Badge>
                             </TableCell>
+                            {!selectedDate && (
+                              <TableCell className="text-slate-400">
+                                {format(new Date(reg.createdAt), "dd/MM", { locale: pt })}
+                              </TableCell>
+                            )}
                             <TableCell className="text-right text-slate-400 font-medium pr-6">
                               {format(new Date(reg.createdAt), "HH:mm")}
                             </TableCell>
