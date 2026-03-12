@@ -52,17 +52,12 @@ export default function LoginPage() {
   const onSubmit = (data: LoginFormValues) => {
     console.log("Login attempt with:", data.username);
     login.mutate(data, {
-      onSuccess: async () => {
-        // Refetch user to confirm session
-        const result = await queryClient.refetchQueries({ queryKey: [api.auth.me.path] });
-        
-        // Try wouter first (preview)
+      onSuccess: () => {
+        toast({
+          title: "Sessão iniciada",
+          description: "Bem-vindo ao painel de administração.",
+        });
         setLocation("/admin");
-        
-        // Hard redirect as fallback (production) - use replace to avoid back button issues
-        setTimeout(() => {
-          window.location.replace("/admin");
-        }, 100);
       },
       onError: (error) => {
         console.error("Login error:", error);
