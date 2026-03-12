@@ -52,14 +52,17 @@ export default function LoginPage() {
   const onSubmit = (data: LoginFormValues) => {
     console.log("Login attempt with:", data.username);
     login.mutate(data, {
-      onSuccess: () => {
-        queryClient.setQueryData([api.auth.me.path], undefined);
-        // First try wouter routing (for iframe preview)
+      onSuccess: async () => {
+        // Refetch user to confirm session
+        const result = await queryClient.refetchQueries({ queryKey: [api.auth.me.path] });
+        
+        // Try wouter first (preview)
         setLocation("/admin");
-        // Fallback to hard redirect after short delay (for production)
+        
+        // Hard redirect as fallback (production) - use replace to avoid back button issues
         setTimeout(() => {
-          window.location.href = "/admin";
-        }, 500);
+          window.location.replace("/admin");
+        }, 100);
       },
       onError: (error) => {
         console.error("Login error:", error);
