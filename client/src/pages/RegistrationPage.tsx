@@ -1,7 +1,8 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { BookOpen, User, Calendar, BookOpenCheck, Lock } from "lucide-react";
+import { User, Calendar, BookOpenCheck, Lock } from "lucide-react";
+import logoEscola from "/logo-escola.png";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useCreateRegistration } from "@/hooks/use-registrations";
@@ -75,8 +76,8 @@ export default function RegistrationPage() {
 
       <div className="w-full max-w-xl relative z-10">
         <div className="text-center mb-8">
-          <div className="mx-auto bg-primary/20 w-20 h-20 rounded-2xl flex items-center justify-center mb-6 shadow-inner border border-primary/40">
-            <BookOpen className="w-10 h-10 text-primary" />
+          <div className="mx-auto w-24 h-24 rounded-full overflow-hidden mb-6 shadow-xl border-2 border-primary/40">
+            <img src={logoEscola} alt="Agrupamento de Escolas de Montijo" className="w-full h-full object-cover" />
           </div>
           <h1 className="text-4xl font-bold text-white tracking-tight mb-3">
             Biblioteca Escolar

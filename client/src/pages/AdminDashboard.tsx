@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
-import { format, isSameDay, isSameMonth } from "date-fns";
+import { format, isSameDay, isSameMonth, isWithinInterval, startOfDay, endOfDay } from "date-fns";
 import { pt } from "date-fns/locale";
+import type { DateRange } from "react-day-picker";
 import { LogOut, LayoutDashboard, Calendar as CalendarIcon, Users, Download } from "lucide-react";
 import { useUser, useLogout } from "@/hooks/use-auth";
 import { useRegistrations } from "@/hooks/use-registrations";
+import logoEscola from "/logo-escola.png";
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -22,10 +24,10 @@ import { Badge } from "@/components/ui/badge";
 
 export default function AdminDashboard() {
   const [, setLocation] = useLocation();
-  const { data: user, isLoading: isAuthLoading, error: authError } = useUser();
+  const { data: user, isLoading: isAuthLoading } = useUser();
   const logout = useLogout();
   
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [currentMonth] = useState<Date>(new Date());
   
   const { data: registrations = [], isLoading: isRegLoading } = useRegistrations();
@@ -53,18 +55,30 @@ export default function AdminDashboard() {
     });
   };
 
-  const handleExportCSV = () => {
-    const dateRef = selectedDate ?? currentMonth;
-    const monthStr = `${dateRef.getFullYear()}-${String(dateRef.getMonth() + 1).padStart(2, "0")}`;
-    const url = `/api/registrations/export/csv?month=${monthStr}`;
-    window.location.href = url;
+  const handleExportExcel = () => {
+    const params = new URLSearchParams();
+    if (dateRange?.from) params.set("from", dateRange.from.toISOString().split("T")[0]);
+    if (dateRange?.to) params.set("to", dateRange.to.toISOString().split("T")[0]);
+    else if (dateRange?.from) params.set("to", dateRange.from.toISOString().split("T")[0]);
+    
+    if (!dateRange?.from) {
+      // Export whole current month
+      const year = currentMonth.getFullYear();
+      const month = String(currentMonth.getMonth() + 1).padStart(2, "0");
+      params.set("month", `${year}-${month}`);
+    }
+    window.location.href = `/api/registrations/export/excel?${params.toString()}`;
   };
 
-  // If a day is selected, show only that day. Otherwise show the whole current month.
+  // Filter logic: if range selected use range, otherwise show whole month
   const filteredRegistrations = registrations.filter((reg) => {
     const regDate = new Date(reg.createdAt);
-    if (selectedDate) {
-      return isSameDay(regDate, selectedDate);
+    if (dateRange?.from) {
+      const end = dateRange.to ?? dateRange.from;
+      return isWithinInterval(regDate, {
+        start: startOfDay(dateRange.from),
+        end: endOfDay(end),
+      });
     }
     return isSameMonth(regDate, currentMonth);
   });
@@ -73,6 +87,15 @@ export default function AdminDashboard() {
   const todayCount = registrations.filter((reg) =>
     isSameDay(new Date(reg.createdAt), new Date())
   ).length;
+
+  const hasRange = !!dateRange?.from;
+  const rangeLabel = hasRange
+    ? dateRange.to && !isSameDay(dateRange.from!, dateRange.to)
+      ? `${format(dateRange.from!, "d MMM", { locale: pt })} – ${format(dateRange.to, "d MMM yyyy", { locale: pt })}`
+      : format(dateRange.from!, "d 'de' MMMM yyyy", { locale: pt })
+    : format(currentMonth, "MMMM 'de' yyyy", { locale: pt });
+
+  const colSpan = hasRange ? 4 : 5;
 
   const getActivityColor = (activity: string) => {
     switch (activity.toLowerCase()) {
@@ -91,8 +114,8 @@ export default function AdminDashboard() {
       <header className="bg-slate-800 border-b border-slate-700 sticky top-0 z-30 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="bg-primary/20 p-2 rounded-lg">
-              <LayoutDashboard className="w-6 h-6 text-primary" />
+            <div className="w-10 h-10 rounded-full overflow-hidden border border-primary/40 shrink-0">
+              <img src={logoEscola} alt="Logo" className="w-full h-full object-cover" />
             </div>
             <div>
               <h1 className="text-xl font-bold text-white tracking-tight leading-none">
@@ -124,16 +147,30 @@ export default function AdminDashboard() {
             <Card className="border-0 shadow-lg shadow-black/40 rounded-2xl overflow-hidden">
               <div className="bg-slate-800 p-4 text-white flex items-center gap-3">
                 <CalendarIcon className="w-5 h-5 text-primary" />
-                <h2 className="font-semibold">Selecionar Data</h2>
+                <div>
+                  <h2 className="font-semibold leading-tight">Filtrar por Intervalo</h2>
+                  <p className="text-xs text-slate-400">Clica para início, depois fim</p>
+                </div>
               </div>
-              <CardContent className="p-4 flex justify-center bg-slate-900">
+              <CardContent className="p-4 flex flex-col items-center gap-3 bg-slate-900">
                 <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={setSelectedDate}
+                  mode="range"
+                  selected={dateRange}
+                  onSelect={setDateRange}
                   className="rounded-xl border border-slate-700"
                   locale={pt}
+                  numberOfMonths={1}
                 />
+                {hasRange && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setDateRange(undefined)}
+                    className="w-full rounded-lg text-slate-400 border-slate-700 hover:border-slate-500 text-xs"
+                  >
+                    Limpar seleção — ver mês todo
+                  </Button>
+                )}
               </CardContent>
             </Card>
 
@@ -145,14 +182,14 @@ export default function AdminDashboard() {
                   </div>
                   <div>
                     <p className="text-blue-100 text-sm font-medium">
-                      {selectedDate ? `${format(selectedDate, "d 'de' MMMM", { locale: pt })}` : "Este mês"}
+                      {hasRange ? rangeLabel : "Este mês"}
                     </p>
                     <p className="text-3xl font-bold tracking-tight">
                       {isRegLoading ? "-" : filteredRegistrations.length}
                     </p>
                   </div>
                 </div>
-                {!selectedDate && (
+                {!hasRange && (
                   <div className="border-t border-white/20 pt-4 flex items-center justify-between">
                     <p className="text-blue-100 text-sm">Hoje</p>
                     <p className="text-xl font-bold">{isRegLoading ? "-" : todayCount}</p>
@@ -172,8 +209,8 @@ export default function AdminDashboard() {
                       Registos de Presença
                     </CardTitle>
                     <CardDescription className="text-slate-400 mt-1">
-                      {selectedDate 
-                        ? `A mostrar registos de ${format(selectedDate, "dd 'de' MMMM, yyyy", { locale: pt })}` 
+                      {hasRange
+                        ? `A mostrar registos de ${rangeLabel}`
                         : `A mostrar todos os registos de ${format(currentMonth, "MMMM 'de' yyyy", { locale: pt })}`}
                     </CardDescription>
                   </div>
@@ -182,22 +219,12 @@ export default function AdminDashboard() {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      onClick={handleExportCSV}
+                      onClick={handleExportExcel}
                       className="rounded-lg text-slate-400 hover:text-green-400 hover:border-green-600 border-slate-600"
                     >
                       <Download className="w-4 h-4 mr-2" />
-                      Exportar CSV
+                      Exportar Excel
                     </Button>
-                    {selectedDate && (
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => setSelectedDate(undefined)}
-                        className="shrink-0 rounded-lg text-slate-400 border-slate-600 hover:border-slate-500"
-                      >
-                        Ver Mês Todo
-                      </Button>
-                    )}
                   </div>
                 </div>
               </CardHeader>
@@ -210,27 +237,29 @@ export default function AdminDashboard() {
                         <TableHead className="font-semibold text-slate-300 py-4 pl-6">Aluno</TableHead>
                         <TableHead className="font-semibold text-slate-300">Ano / Turma</TableHead>
                         <TableHead className="font-semibold text-slate-300">Atividade</TableHead>
-                        {!selectedDate && (
+                        {!hasRange && (
                           <TableHead className="font-semibold text-slate-300">Data</TableHead>
                         )}
-                        <TableHead className="font-semibold text-slate-300 text-right pr-6">Hora</TableHead>
+                        <TableHead className="font-semibold text-slate-300 text-right pr-6">
+                          {hasRange ? "Data / Hora" : "Hora"}
+                        </TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {isRegLoading ? (
                         <TableRow>
-                          <TableCell colSpan={selectedDate ? 4 : 5} className="h-48 text-center text-slate-400">
+                          <TableCell colSpan={colSpan} className="h-48 text-center text-slate-400">
                             A carregar dados...
                           </TableCell>
                         </TableRow>
                       ) : filteredRegistrations.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={selectedDate ? 4 : 5} className="h-48 text-center text-slate-400">
+                          <TableCell colSpan={colSpan} className="h-48 text-center text-slate-400">
                             <div className="flex flex-col items-center justify-center">
                               <BookOpen className="w-10 h-10 text-slate-600 mb-3" />
                               <p>
-                                {selectedDate
-                                  ? "Nenhum registo encontrado para este dia."
+                                {hasRange
+                                  ? "Nenhum registo encontrado para este intervalo."
                                   : "Nenhum registo encontrado para este mês."}
                               </p>
                             </div>
@@ -250,13 +279,15 @@ export default function AdminDashboard() {
                                 {reg.activity}
                               </Badge>
                             </TableCell>
-                            {!selectedDate && (
+                            {!hasRange && (
                               <TableCell className="text-slate-400">
                                 {format(new Date(reg.createdAt), "dd/MM", { locale: pt })}
                               </TableCell>
                             )}
                             <TableCell className="text-right text-slate-400 font-medium pr-6">
-                              {format(new Date(reg.createdAt), "HH:mm")}
+                              {hasRange
+                                ? format(new Date(reg.createdAt), "dd/MM HH:mm")
+                                : format(new Date(reg.createdAt), "HH:mm")}
                             </TableCell>
                           </TableRow>
                         ))

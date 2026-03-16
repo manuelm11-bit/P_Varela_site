@@ -1,7 +1,8 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Shield, ArrowLeft, Key, UserCircle } from "lucide-react";
+import { ArrowLeft, Key, UserCircle } from "lucide-react";
+import logoEscola from "/logo-escola.png";
 import { useLocation, Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useLogin, useUser } from "@/hooks/use-auth";
@@ -99,8 +100,8 @@ export default function LoginPage() {
         ) : (
           <Card className="bg-slate-800/80 backdrop-blur-xl border-slate-700/50 shadow-2xl p-8 sm:p-10 rounded-3xl">
           <div className="text-center mb-8">
-            <div className="mx-auto bg-primary/20 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 shadow-inner border border-primary/30">
-              <Shield className="w-8 h-8 text-primary" />
+            <div className="mx-auto w-20 h-20 rounded-full overflow-hidden mb-6 shadow-xl border-2 border-primary/40">
+              <img src={logoEscola} alt="Agrupamento de Escolas de Montijo" className="w-full h-full object-cover" />
             </div>
             <h1 className="text-3xl font-bold text-white tracking-tight mb-2">
               Administração

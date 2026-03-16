@@ -5,6 +5,7 @@ import { api } from "@shared/routes";
 import { z } from "zod";
 import session from "express-session";
 import MemoryStore from "memorystore";
+import * as XLSX from "xlsx";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -191,6 +192,74 @@ export async function registerRoutes(
       res.send(csvWithBOM);
     } catch (err) {
       console.error("Export error:", err);
+      res.status(500).json({ message: "Erro ao exportar dados" });
+    }
+  });
+
+  // Export registrations as Excel
+  app.get("/api/registrations/export/excel", requireAuth, async (req, res) => {
+    try {
+      const registrations = await storage.getRegistrations();
+      
+      let filteredRegs = registrations;
+      const fromParam = req.query.from as string;
+      const toParam = req.query.to as string;
+      const monthParam = req.query.month as string;
+
+      if (fromParam) {
+        const from = new Date(fromParam);
+        from.setHours(0, 0, 0, 0);
+        const to = toParam ? new Date(toParam) : new Date(fromParam);
+        to.setHours(23, 59, 59, 999);
+        filteredRegs = registrations.filter(reg => {
+          const d = new Date(reg.createdAt);
+          return d >= from && d <= to;
+        });
+      } else if (monthParam) {
+        const [year, month] = monthParam.split("-");
+        filteredRegs = registrations.filter(reg => {
+          const d = new Date(reg.createdAt);
+          return d.getFullYear() === parseInt(year) && (d.getMonth() + 1) === parseInt(month);
+        });
+      }
+
+      const rows = filteredRegs.map(reg => ({
+        "Nome": reg.name,
+        "Ano": reg.year,
+        "Turma": reg.className,
+        "Atividade": reg.activity,
+        "Data": new Date(reg.createdAt).toLocaleDateString("pt-PT"),
+        "Hora de Entrada": new Date(reg.createdAt).toLocaleTimeString("pt-PT", { hour: "2-digit", minute: "2-digit" }),
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      
+      // Set column widths
+      worksheet["!cols"] = [
+        { wch: 30 }, // Nome
+        { wch: 8 },  // Ano
+        { wch: 8 },  // Turma
+        { wch: 20 }, // Atividade
+        { wch: 12 }, // Data
+        { wch: 16 }, // Hora
+      ];
+
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Registos");
+
+      const fileName = fromParam
+        ? `registos_${fromParam}_${toParam || fromParam}.xlsx`
+        : monthParam
+        ? `registos_${monthParam}.xlsx`
+        : `registos.xlsx`;
+
+      const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
+
+      res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
+      res.send(buffer);
+    } catch (err) {
+      console.error("Excel export error:", err);
       res.status(500).json({ message: "Erro ao exportar dados" });
     }
   });
