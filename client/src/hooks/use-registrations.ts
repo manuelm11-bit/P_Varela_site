@@ -16,6 +16,23 @@ export function useRegistrations() {
   });
 }
 
+export function useDeleteRegistration() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const res = await fetch(`/api/registrations/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Erro ao apagar registo");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [api.registrations.list.path] });
+    },
+  });
+}
+
 export function useCreateRegistration() {
   const queryClient = useQueryClient();
   return useMutation({

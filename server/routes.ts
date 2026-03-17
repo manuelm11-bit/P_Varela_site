@@ -151,6 +151,13 @@ export async function registerRoutes(
     res.json(registrations);
   });
 
+  app.delete("/api/registrations/:id", requireAuth, async (req, res) => {
+    const id = parseInt(req.params.id);
+    if (isNaN(id)) return res.status(400).json({ message: "ID inválido" });
+    await storage.deleteRegistration(id);
+    res.json({ message: "Registo apagado com sucesso" });
+  });
+
   // Export registrations as CSV
   app.get("/api/registrations/export/csv", requireAuth, async (req, res) => {
     try {

@@ -3,16 +3,21 @@ import { useLocation } from "wouter";
 import { format, isSameDay, isSameMonth, isWithinInterval, startOfDay, endOfDay } from "date-fns";
 import { pt } from "date-fns/locale";
 import type { DateRange } from "react-day-picker";
-import { LogOut, Users, Download, Calendar as CalendarIcon, Search, Sun, Moon, X } from "lucide-react";
+import { LogOut, Users, Download, Calendar as CalendarIcon, Search, Sun, Moon, X, Trash2, AlertTriangle } from "lucide-react";
 import { useUser, useLogout } from "@/hooks/use-auth";
-import { useRegistrations } from "@/hooks/use-registrations";
+import { useRegistrations, useDeleteRegistration } from "@/hooks/use-registrations";
 import { useTheme } from "@/lib/theme";
+import { useToast } from "@/hooks/use-toast";
 import logoEscola from "/logo-escola.png";
+import type { Registration } from "@shared/schema";
 
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+} from "@/components/ui/dialog";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -47,6 +52,7 @@ export default function AdminDashboard() {
   const { data: user, isLoading: isAuthLoading } = useUser();
   const logout = useLogout();
   const { theme, toggleTheme } = useTheme();
+  const { toast } = useToast();
 
   const [dateRange, setDateRange] = useState<DateRange | undefined>(undefined);
   const [currentMonth] = useState<Date>(new Date());
@@ -55,7 +61,11 @@ export default function AdminDashboard() {
   const [searchYear, setSearchYear] = useState("");
   const [searchClass, setSearchClass] = useState("");
 
+  const [deleteTarget, setDeleteTarget] = useState<Registration | null>(null);
+  const [confirmStep, setConfirmStep] = useState<0 | 1 | 2>(0);
+
   const { data: registrations = [], isLoading: isRegLoading } = useRegistrations();
+  const deleteRegistration = useDeleteRegistration();
 
   useEffect(() => {
     if (!isAuthLoading && !user) setLocation("/login");
@@ -73,6 +83,29 @@ export default function AdminDashboard() {
   }
 
   const handleLogout = () => logout.mutate(undefined, { onSuccess: () => setLocation("/login") });
+
+  const openDeleteDialog = (reg: Registration) => {
+    setDeleteTarget(reg);
+    setConfirmStep(1);
+  };
+
+  const closeDeleteDialog = () => {
+    setDeleteTarget(null);
+    setConfirmStep(0);
+  };
+
+  const handleDelete = () => {
+    if (!deleteTarget) return;
+    deleteRegistration.mutate(deleteTarget.id, {
+      onSuccess: () => {
+        toast({ title: "Registo apagado", description: `O registo de ${deleteTarget.name} foi apagado.` });
+        closeDeleteDialog();
+      },
+      onError: () => {
+        toast({ variant: "destructive", title: "Erro", description: "Não foi possível apagar o registo." });
+      },
+    });
+  };
 
   const handleExportExcel = () => {
     const params = new URLSearchParams();
@@ -119,7 +152,7 @@ export default function AdminDashboard() {
       : format(dateRange.from!, "d 'de' MMMM yyyy", { locale: pt })
     : format(currentMonth, "MMMM 'de' yyyy", { locale: pt });
 
-  const colSpan = hasRange ? 4 : 5;
+  const colSpan = hasRange ? 5 : 6;
 
   return (
     <div className="min-h-screen bg-background">
@@ -309,9 +342,10 @@ export default function AdminDashboard() {
                         {!hasRange && (
                           <TableHead className="font-semibold text-muted-foreground">Data</TableHead>
                         )}
-                        <TableHead className="font-semibold text-muted-foreground text-right pr-6">
+                        <TableHead className="font-semibold text-muted-foreground text-right">
                           {hasRange ? "Data / Hora" : "Hora"}
                         </TableHead>
+                        <TableHead className="w-12 pr-4"></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -362,10 +396,20 @@ export default function AdminDashboard() {
                                 {format(new Date(reg.createdAt), "dd/MM", { locale: pt })}
                               </TableCell>
                             )}
-                            <TableCell className="text-right text-muted-foreground font-medium pr-6">
+                            <TableCell className="text-right text-muted-foreground font-medium">
                               {hasRange
                                 ? format(new Date(reg.createdAt), "dd/MM HH:mm")
                                 : format(new Date(reg.createdAt), "HH:mm")}
+                            </TableCell>
+                            <TableCell className="pr-4">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => openDeleteDialog(reg)}
+                                className="h-8 w-8 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
                             </TableCell>
                           </TableRow>
                         ))
@@ -379,6 +423,70 @@ export default function AdminDashboard() {
 
         </div>
       </main>
+
+      {/* Delete confirmation dialog — 2 steps */}
+      <Dialog open={confirmStep > 0} onOpenChange={(open) => { if (!open) closeDeleteDialog(); }}>
+        <DialogContent className="sm:max-w-md bg-card border-border">
+          {confirmStep === 1 && deleteTarget && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-foreground flex items-center gap-2">
+                  <Trash2 className="w-5 h-5 text-red-500" />
+                  Apagar Registo
+                </DialogTitle>
+                <DialogDescription className="text-muted-foreground pt-1">
+                  Tens a certeza que queres apagar o registo de{" "}
+                  <span className="font-semibold text-foreground">{deleteTarget.name}</span>?
+                </DialogDescription>
+              </DialogHeader>
+              <div className="rounded-xl bg-muted/50 border border-border p-4 text-sm space-y-1 text-muted-foreground">
+                <p><span className="font-medium text-foreground">Aluno:</span> {deleteTarget.name}</p>
+                <p><span className="font-medium text-foreground">Ano / Turma:</span> {deleteTarget.year} - Turma {deleteTarget.className}</p>
+                <p><span className="font-medium text-foreground">Atividade:</span> {getActivityIcon(deleteTarget.activity)} {deleteTarget.activity}</p>
+                <p><span className="font-medium text-foreground">Data:</span> {format(new Date(deleteTarget.createdAt), "dd/MM/yyyy 'às' HH:mm", { locale: pt })}</p>
+              </div>
+              <DialogFooter className="gap-2 sm:gap-0">
+                <Button variant="outline" onClick={closeDeleteDialog} className="border-border">
+                  Cancelar
+                </Button>
+                <Button variant="destructive" onClick={() => setConfirmStep(2)}>
+                  Continuar
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+
+          {confirmStep === 2 && deleteTarget && (
+            <>
+              <DialogHeader>
+                <DialogTitle className="text-foreground flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-amber-500" />
+                  Confirmação Final
+                </DialogTitle>
+                <DialogDescription className="text-muted-foreground pt-1">
+                  Esta ação é <span className="font-semibold text-red-500">irreversível</span>. O registo de{" "}
+                  <span className="font-semibold text-foreground">{deleteTarget.name}</span> será apagado permanentemente da base de dados.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="rounded-xl bg-red-500/10 border border-red-500/30 p-4 text-sm text-red-600 dark:text-red-400">
+                ⚠️ Não poderás recuperar este registo após apagar.
+              </div>
+              <DialogFooter className="gap-2 sm:gap-0">
+                <Button variant="outline" onClick={() => setConfirmStep(1)} className="border-border">
+                  Voltar
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleDelete}
+                  disabled={deleteRegistration.isPending}
+                >
+                  {deleteRegistration.isPending ? "A apagar..." : "Apagar Definitivamente"}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
