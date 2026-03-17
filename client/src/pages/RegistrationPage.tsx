@@ -1,11 +1,12 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { User, Calendar, BookOpenCheck, Lock } from "lucide-react";
+import { User, Calendar, Lock, Sun, Moon } from "lucide-react";
 import logoEscola from "/logo-escola.png";
 import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useCreateRegistration } from "@/hooks/use-registrations";
+import { useTheme } from "@/lib/theme";
 
 import {
   Form,
@@ -35,18 +36,23 @@ const registrationSchema = z.object({
 
 type RegistrationFormValues = z.infer<typeof registrationSchema>;
 
+const ACTIVITIES = [
+  { value: "estudar", label: "Estudar", icon: "📚" },
+  { value: "jogar damas", label: "Jogar Damas", icon: "🎲" },
+  { value: "jogar xadrez", label: "Jogar Xadrez", icon: "♟" },
+  { value: "ler", label: "Ler", icon: "📖" },
+  { value: "fazer trabalho", label: "Fazer Trabalho", icon: "💼" },
+  { value: "outro", label: "Outro", icon: "📝" },
+];
+
 export default function RegistrationPage() {
   const { toast } = useToast();
   const createRegistration = useCreateRegistration();
+  const { theme, toggleTheme } = useTheme();
 
   const form = useForm<RegistrationFormValues>({
     resolver: zodResolver(registrationSchema),
-    defaultValues: {
-      name: "",
-      year: "",
-      className: "",
-      activity: "",
-    },
+    defaultValues: { name: "", year: "", className: "", activity: "" },
   });
 
   const onSubmit = (data: RegistrationFormValues) => {
@@ -59,35 +65,39 @@ export default function RegistrationPage() {
         form.reset();
       },
       onError: (error) => {
-        toast({
-          variant: "destructive",
-          title: "Erro",
-          description: error.message,
-        });
+        toast({ variant: "destructive", title: "Erro", description: error.message });
       },
     });
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Decorative background elements */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
       <div className="absolute top-[-10%] left-[-10%] w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={toggleTheme}
+        className="absolute top-4 right-4 text-muted-foreground hover:text-foreground rounded-full"
+      >
+        {theme === "dark" ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+      </Button>
 
       <div className="w-full max-w-xl relative z-10">
         <div className="text-center mb-8">
           <div className="mx-auto w-24 h-24 rounded-full overflow-hidden mb-6 shadow-xl border-2 border-primary/40">
             <img src={logoEscola} alt="Agrupamento de Escolas de Montijo" className="w-full h-full object-cover" />
           </div>
-          <h1 className="text-4xl font-bold text-white tracking-tight mb-3">
+          <h1 className="text-4xl font-bold text-foreground tracking-tight mb-3">
             Biblioteca Escolar
           </h1>
-          <p className="text-slate-400 text-lg">
+          <p className="text-muted-foreground text-lg">
             Regista a tua presença e atividade de hoje.
           </p>
         </div>
 
-        <Card className="bg-slate-800/80 backdrop-blur-xl border border-slate-700/50 p-8 md:p-10 rounded-3xl shadow-xl shadow-black/50">
+        <Card className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl border border-slate-200 dark:border-slate-700/50 p-8 md:p-10 rounded-3xl shadow-xl shadow-black/10 dark:shadow-black/50">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField
@@ -95,18 +105,18 @@ export default function RegistrationPage() {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-white font-semibold">Nome Completo</FormLabel>
+                    <FormLabel className="text-foreground font-semibold">Nome Completo</FormLabel>
                     <FormControl>
                       <div className="relative">
-                        <User className="absolute left-3.5 top-3.5 h-5 w-5 text-slate-400" />
+                        <User className="absolute left-3.5 top-3.5 h-5 w-5 text-muted-foreground" />
                         <Input
                           placeholder="Ex: Ana Silva"
-                          className="pl-11 h-12 bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-500 focus:bg-slate-700 transition-colors rounded-xl"
+                          className="pl-11 h-12 bg-slate-100 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600 text-foreground placeholder:text-muted-foreground focus:bg-white dark:focus:bg-slate-700 transition-colors rounded-xl"
                           {...field}
                         />
                       </div>
                     </FormControl>
-                    <FormMessage className="text-red-400" />
+                    <FormMessage className="text-red-500" />
                   </FormItem>
                 )}
               />
@@ -117,18 +127,18 @@ export default function RegistrationPage() {
                   name="year"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-white font-semibold">Ano</FormLabel>
+                      <FormLabel className="text-foreground font-semibold">Ano</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <Calendar className="absolute left-3.5 top-3.5 h-5 w-5 text-slate-400" />
+                          <Calendar className="absolute left-3.5 top-3.5 h-5 w-5 text-muted-foreground" />
                           <Input
                             placeholder="Ex: 10º"
-                            className="pl-11 h-12 bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-500 focus:bg-slate-700 transition-colors rounded-xl"
+                            className="pl-11 h-12 bg-slate-100 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600 text-foreground placeholder:text-muted-foreground focus:bg-white dark:focus:bg-slate-700 transition-colors rounded-xl"
                             {...field}
                           />
                         </div>
                       </FormControl>
-                      <FormMessage className="text-red-400" />
+                      <FormMessage className="text-red-500" />
                     </FormItem>
                   )}
                 />
@@ -138,15 +148,15 @@ export default function RegistrationPage() {
                   name="className"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-white font-semibold">Turma</FormLabel>
+                      <FormLabel className="text-foreground font-semibold">Turma</FormLabel>
                       <FormControl>
                         <Input
                           placeholder="Ex: A"
-                          className="h-12 bg-slate-700/50 border-slate-600 text-white placeholder:text-slate-500 focus:bg-slate-700 transition-colors rounded-xl px-4"
+                          className="h-12 bg-slate-100 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600 text-foreground placeholder:text-muted-foreground focus:bg-white dark:focus:bg-slate-700 transition-colors rounded-xl px-4"
                           {...field}
                         />
                       </FormControl>
-                      <FormMessage className="text-red-400" />
+                      <FormMessage className="text-red-500" />
                     </FormItem>
                   )}
                 />
@@ -157,26 +167,25 @@ export default function RegistrationPage() {
                 name="activity"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-white font-semibold">O que vens fazer?</FormLabel>
+                    <FormLabel className="text-foreground font-semibold">O que vens fazer?</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <div className="relative">
-                          <BookOpenCheck className="absolute left-3.5 top-3.5 h-5 w-5 text-slate-400 z-10" />
-                          <SelectTrigger className="pl-11 h-12 bg-slate-700/50 border-slate-600 text-white focus:bg-slate-700 transition-colors rounded-xl">
-                            <SelectValue placeholder="Selecione uma atividade..." />
-                          </SelectTrigger>
-                        </div>
+                        <SelectTrigger className="h-12 bg-slate-100 dark:bg-slate-700/50 border-slate-200 dark:border-slate-600 text-foreground focus:bg-white dark:focus:bg-slate-700 transition-colors rounded-xl px-4">
+                          <SelectValue placeholder="Selecione uma atividade..." />
+                        </SelectTrigger>
                       </FormControl>
-                      <SelectContent className="rounded-xl bg-slate-800 border-slate-700">
-                        <SelectItem value="estudar">Estudar</SelectItem>
-                        <SelectItem value="jogar damas">Jogar Damas</SelectItem>
-                        <SelectItem value="jogar xadrez">Jogar Xadrez</SelectItem>
-                        <SelectItem value="ler">Ler</SelectItem>
-                        <SelectItem value="fazer trabalho">Fazer Trabalho</SelectItem>
-                        <SelectItem value="outro">Outro</SelectItem>
+                      <SelectContent className="rounded-xl bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700">
+                        {ACTIVITIES.map((a) => (
+                          <SelectItem key={a.value} value={a.value} className="text-foreground">
+                            <span className="flex items-center gap-2">
+                              <span>{a.icon}</span>
+                              <span>{a.label}</span>
+                            </span>
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
-                    <FormMessage className="text-red-400" />
+                    <FormMessage className="text-red-500" />
                   </FormItem>
                 )}
               />
@@ -195,7 +204,7 @@ export default function RegistrationPage() {
         <div className="mt-8 text-center">
           <Link
             href="/login"
-            className="inline-flex items-center justify-center gap-2 text-sm font-medium text-slate-300 hover:text-primary transition-colors bg-slate-800/50 px-4 py-2 rounded-full border border-slate-700/50 hover:bg-slate-700/50 shadow-sm"
+            className="inline-flex items-center justify-center gap-2 text-sm font-medium text-muted-foreground hover:text-primary transition-colors bg-white/50 dark:bg-slate-800/50 px-4 py-2 rounded-full border border-slate-200 dark:border-slate-700/50 hover:bg-white dark:hover:bg-slate-700/50 shadow-sm"
           >
             <Lock className="w-4 h-4" />
             Acesso Restrito
