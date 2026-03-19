@@ -164,9 +164,7 @@ export default function AdminDashboard() {
               <img src={logoEscola} alt="Logo" className="w-full h-full object-cover" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-foreground tracking-tight leading-none">
-                Gestão da Biblioteca
-              </h1>
+              <h1 className="text-xl font-bold text-foreground tracking-tight leading-none">Gestão da Biblioteca </h1>
               <p className="text-xs text-muted-foreground">
                 Sessão iniciada como <span className="font-semibold">{user.username}</span>
               </p>
@@ -194,7 +192,6 @@ export default function AdminDashboard() {
           </div>
         </div>
       </header>
-
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
@@ -423,7 +420,6 @@ export default function AdminDashboard() {
 
         </div>
       </main>
-
       {/* Delete confirmation dialog — 2 steps */}
       <Dialog open={confirmStep > 0} onOpenChange={(open) => { if (!open) closeDeleteDialog(); }}>
         <DialogContent className="sm:max-w-md bg-card border-border">
