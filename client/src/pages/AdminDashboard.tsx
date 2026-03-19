@@ -164,7 +164,7 @@ export default function AdminDashboard() {
               <img src={logoEscola} alt="Logo" className="w-full h-full object-cover" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-foreground tracking-tight leading-none">Gestão da Biblioteca </h1>
+              <h1 className="text-xl font-bold text-foreground tracking-tight leading-none">Gestão da Biblioteca AEMontijo </h1>
               <p className="text-xs text-muted-foreground">
                 Sessão iniciada como <span className="font-semibold">{user.username}</span>
               </p>
