@@ -5,7 +5,7 @@ import { api } from "@shared/routes";
 import { z } from "zod";
 import session from "express-session";
 import MemoryStore from "memorystore";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 
 export async function registerRoutes(
   httpServer: Server,
@@ -230,29 +230,28 @@ export async function registerRoutes(
         });
       }
 
-      const rows = filteredRegs.map(reg => ({
-        "Nome": reg.name,
-        "Ano": reg.year,
-        "Turma": reg.className,
-        "Atividade": reg.activity,
-        "Data": new Date(reg.createdAt).toLocaleDateString("pt-PT"),
-        "Hora de Entrada": new Date(reg.createdAt).toLocaleTimeString("pt-PT", { hour: "2-digit", minute: "2-digit" }),
-      }));
+      const workbook = new ExcelJS.Workbook();
+      const worksheet = workbook.addWorksheet("Registos");
 
-      const worksheet = XLSX.utils.json_to_sheet(rows);
-      
-      // Set column widths
-      worksheet["!cols"] = [
-        { wch: 30 }, // Nome
-        { wch: 8 },  // Ano
-        { wch: 8 },  // Turma
-        { wch: 20 }, // Atividade
-        { wch: 12 }, // Data
-        { wch: 16 }, // Hora
+      worksheet.columns = [
+        { header: "Nome", key: "Nome", width: 30 },
+        { header: "Ano", key: "Ano", width: 8 },
+        { header: "Turma", key: "Turma", width: 8 },
+        { header: "Atividade", key: "Atividade", width: 20 },
+        { header: "Data", key: "Data", width: 12 },
+        { header: "Hora de Entrada", key: "Hora de Entrada", width: 16 },
       ];
 
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Registos");
+      filteredRegs.forEach(reg => {
+        worksheet.addRow({
+          "Nome": reg.name,
+          "Ano": reg.year,
+          "Turma": reg.className,
+          "Atividade": reg.activity,
+          "Data": new Date(reg.createdAt).toLocaleDateString("pt-PT"),
+          "Hora de Entrada": new Date(reg.createdAt).toLocaleTimeString("pt-PT", { hour: "2-digit", minute: "2-digit" }),
+        });
+      });
 
       const fileName = fromParam
         ? `registos_${fromParam}_${toParam || fromParam}.xlsx`
@@ -260,7 +259,7 @@ export async function registerRoutes(
         ? `registos_${monthParam}.xlsx`
         : `registos.xlsx`;
 
-      const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
+      const buffer = await workbook.xlsx.writeBuffer();
 
       res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
       res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
